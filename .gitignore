@@ -1,0 +1,41 @@
+# Ignore Node.js dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Ignore Hardhat compilation artifacts
+artifacts/
+cache/
+
+# Ignore environment variables (API keys, private keys)
+.env
+
+# Ignore Hardhat-specific files
+coverage/
+typechain/
+hardhat.config.ts
+
+# Ignore frontend build files (if applicable)
+Frontend/build/
+Frontend/node_modules/
+
+# Ignore backend dependencies
+Backend/node_modules/
+Backend/*.log
+
+# Ignore compiled Circom artifacts (ZK proofs)
+*.r1cs
+*.wasm
+*.zkey
+
+# Ignore VSCode settings (if using VSCode)
+.vscode/
+
+# Ignore OS-generated files
+.DS_Store
+Thumbs.db
+
+# Ignore logs & temporary files
+*.log
+*.out
+npm-debug.log*
