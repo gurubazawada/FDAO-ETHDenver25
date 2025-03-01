@@ -3,68 +3,46 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-library Counters {
-    struct Counter {
-        uint256 _value;
-    }
-
-    function current(Counter storage counter) internal view returns (uint256) {
-        return counter._value;
-    }
-
-    function increment(Counter storage counter) internal {
-        counter._value += 1;
-    }
-
-    function decrement(Counter storage counter) internal {
-        require(counter._value > 0, "Counter: decrement overflow");
-        counter._value -= 1;
-    }
-
-    function reset(Counter storage counter) internal {
-        counter._value = 0;
-    }
-}
-
 interface IEthStorage {
-    function storeData(bytes calldata data) external returns (string memory);
+    function putBlob(bytes32 key, uint256 blobIdx, uint256 length) external;
 }
 
 contract DataMarket is Ownable {
-    using Counters for Counters.Counter;
-    Counters.Counter private _dataIdCounter;
-
-    IEthStorage public ethStorage;
-
     struct DataEntry {
         string metadata;
-        string ethStorageHash;
+        bytes32 ethStorageKey; // Key used to retrieve from EthStorage
+        uint256 blobIndex; // Index of the blob within EthStorage
+        uint256 dataLength; // Length of the stored data
         address uploader;
     }
 
     mapping(uint256 => DataEntry) public dataEntries;
+    IEthStorage public ethStorage;
+    uint256 public dataCounter;
 
-    event DataUploaded(uint256 indexed dataId, string ethStorageHash, string metadata, address indexed uploader);
+    event DataUploaded(uint256 indexed dataId, bytes32 ethStorageKey, uint256 blobIndex, uint256 dataLength, address indexed uploader);
 
-    // ✅ Pass `_msgSender()` to `Ownable`
     constructor(address _ethStorage) Ownable(msg.sender) {
         require(_ethStorage != address(0), "Invalid EthStorage address");
         ethStorage = IEthStorage(_ethStorage);
     }
 
-    function uploadData(bytes calldata data, string memory metadata) external {
+    function uploadData(bytes32 key, uint256 blobIdx, uint256 length, string memory metadata) external {
         require(bytes(metadata).length > 0, "Metadata cannot be empty");
+        require(length <= 131072, "Exceeds max blob size");
 
-        string memory storedHash = ethStorage.storeData(data);
-        uint256 dataId = _dataIdCounter.current();
-        _dataIdCounter.increment();
+        // Call EthStorage to store data
+        ethStorage.putBlob(key, blobIdx, length);
 
-        dataEntries[dataId] = DataEntry(metadata, storedHash, msg.sender);
-        emit DataUploaded(dataId, storedHash, metadata, msg.sender);
+        // Store metadata
+        uint256 dataId = dataCounter++;
+        dataEntries[dataId] = DataEntry(metadata, key, blobIdx, length, msg.sender);
+
+        emit DataUploaded(dataId, key, blobIdx, length, msg.sender);
     }
 
-    function getData(uint256 dataId) external view returns (string memory metadata, string memory ethStorageHash) {
-        DataEntry memory entry = dataEntries[dataId]; // ✅ Use `memory` instead of `storage`
-        return (entry.metadata, entry.ethStorageHash);
+    function getData(uint256 dataId) external view returns (string memory metadata, bytes32 key, uint256 blobIndex, uint256 dataLength) {
+        DataEntry memory entry = dataEntries[dataId];
+        return (entry.metadata, entry.ethStorageKey, entry.blobIndex, entry.dataLength);
     }
 }
