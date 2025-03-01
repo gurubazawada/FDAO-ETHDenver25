@@ -1,10 +1,100 @@
 import React, { useState } from "react";
 import { ethers } from "ethers";
 import { useNavigate } from "react-router-dom";
-import contestFactorEE from "../ContestFactory.json";
 
 const contestFactoryAddress = "0x23c8748F0c69076bf915e7203F4F7e732d60C46D";
-const contestFactoryAbi = contestFactorEE.abi;
+const contestFactoryAbi = [
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "contestAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "ContestCreated",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "contests",
+    "outputs": [
+      {
+        "internalType": "contract Contest",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_title",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_datasetLink",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_description",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_deadline",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_stakeRequired",
+        "type": "uint256"
+      }
+    ],
+    "name": "createContest",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getContestsCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+];
 
 const SponsorDashboard: React.FC<{ walletAddress: string }> = ({ walletAddress }) => {
   const [title, setTitle] = useState("");
