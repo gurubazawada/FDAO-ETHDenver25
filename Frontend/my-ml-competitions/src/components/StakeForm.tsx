@@ -1,11 +1,17 @@
 import React, { useState } from "react";
+import { ethers } from "ethers";
+import credentialIssuerJson from "../../../../my-hardhat-project/artifacts/contracts/CredentialIssuer.sol/CredentialIssuer.json";
+
+const CREDENTIAL_ISSUER_ADDRESS = "0x1E3D38b55B1110077ff66c6A4e6074B32Db34b3A";
+const CREDENTIAL_ISSUER_ABI = credentialIssuerJson.abi;
 
 interface StakeFormProps {
   stakeAmount: number;
-  account: string;
+  account: string; // We'll no longer rely solely on this value.
+  contestOwner: string;
 }
 
-const StakeForm: React.FC<StakeFormProps> = ({ stakeAmount, account }) => {
+const StakeForm: React.FC<StakeFormProps> = ({ stakeAmount, account, contestOwner }) => {
   const [amount, setAmount] = useState(stakeAmount.toString());
   const [transactionStatus, setTransactionStatus] = useState("");
   const [isStaking, setIsStaking] = useState(false);
@@ -14,12 +20,42 @@ const StakeForm: React.FC<StakeFormProps> = ({ stakeAmount, account }) => {
     try {
       setIsStaking(true);
       setTransactionStatus("Staking...");
-      // Simulate staking process
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setTransactionStatus("Staking successful!");
-    } catch (error) {
+
+      if (!window.ethereum) {
+        throw new Error("Ethereum wallet not found");
+      }
+
+      // Request accounts and get provider and signer
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner(); // await the signer
+
+      // Parse stake amount (assumed to be in ETH)
+      const stakeValue = ethers.parseEther(amount);
+
+      // 1. Send ETH to the contest owner
+      const paymentTx = await signer.sendTransaction({
+        to: contestOwner,
+        value: stakeValue,
+      });
+      setTransactionStatus(`Payment transaction submitted: ${paymentTx.hash}`);
+      await paymentTx.wait();
+      setTransactionStatus("Payment successful! Issuing NFT...");
+
+      // 2. Get the staker's address directly from the signer
+      const staker = await signer.getAddress();
+
+      // 3. Issue NFT credential to the staker via CredentialIssuer contract
+      const nftContract = new ethers.Contract(CREDENTIAL_ISSUER_ADDRESS, CREDENTIAL_ISSUER_ABI, signer);
+      // For the dataHash, we use a dummy hash here; in a real scenario you might hash file contents or other data.
+      const dataHash = ethers.keccak256(ethers.toUtf8Bytes("Stake NFT Credential"));
+      const nftTx = await nftContract.issueCredential(staker, dataHash);
+      setTransactionStatus(`NFT transaction submitted: ${nftTx.hash}`);
+      await nftTx.wait();
+      setTransactionStatus("Staking and NFT issuance successful!");
+    } catch (error: any) {
       console.error("Staking error:", error);
-      setTransactionStatus("Staking failed!");
+      setTransactionStatus("Staking failed: " + error.message);
     } finally {
       setIsStaking(false);
     }
@@ -33,7 +69,7 @@ const StakeForm: React.FC<StakeFormProps> = ({ stakeAmount, account }) => {
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
         className="mb-3 p-2 border border-gray-300 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-300"
-        placeholder="Enter amount"
+        placeholder="Enter amount (ETH)"
       />
       <button
         onClick={handleStake}

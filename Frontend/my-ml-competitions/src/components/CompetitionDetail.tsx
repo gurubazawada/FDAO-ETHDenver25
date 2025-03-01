@@ -10,22 +10,24 @@ interface CompetitionDetailProps {
   walletAddress: string;
 }
 
-// We'll use the ABI from contestJson.
+interface Competition {
+  id: string;
+  title: string;
+  description: string;
+  datasetLink: string;
+  deadline: string;
+  stakeAmount: string;
+  owner: string;
+}
+
 const contestAbi = contestJson.abi;
 
 const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ walletAddress }) => {
-  const { id } = useParams(); 
+  const { id } = useParams();
   const navigate = useNavigate();
 
-  const [competition, setCompetition] = useState<{
-    id: string;
-    title: string;
-    description: string;
-    datasetLink: string;
-    deadline: string;
-    stakeAmount: string;
-  } | null>(null);
-  let [loading, setLoading] = useState(true);
+  const [competition, setCompetition] = useState<Competition | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // File upload states (adjust as needed)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -34,29 +36,26 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ walletAddress }) 
   useEffect(() => {
     const fetchContestDetails = async () => {
       try {
-        setLoading(true);
         if (!id) {
           throw new Error("No contest address (id) found in URL.");
         }
-
-        // Check for MetaMask or other provider
         if (!window.ethereum) {
           throw new Error("No Ethereum wallet found. Please install MetaMask.");
         }
 
-        // Connect to network
         await window.ethereum.request({ method: "eth_requestAccounts" });
         const provider = new ethers.BrowserProvider(window.ethereum);
         const contract = new ethers.Contract(id, contestAbi, provider);
 
-        // Fetch details from the contract
+        // Fetch contest details from the contract.
         const title = await contract.title();
         const description = await contract.description();
         const datasetLink = await contract.datasetLink();
         const deadlineBN = await contract.deadline();
         const stakeRequiredBN = await contract.stakeRequired();
+        // Fetch contest owner (make sure your contest contract has an owner() function)
+        const owner = await contract.owner();
 
-        // Convert BigInts to user-friendly strings
         const deadline = new Date(Number(deadlineBN) * 1000).toLocaleString();
         const stakeAmount = ethers.formatUnits(stakeRequiredBN, "ether");
 
@@ -67,24 +66,20 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ walletAddress }) 
           datasetLink,
           deadline,
           stakeAmount,
+          owner,
         });
       } catch (err) {
         console.error("Error loading contest details:", err);
       } finally {
         setLoading(false);
-        console.log(loading)
       }
     };
-
     fetchContestDetails();
   }, [id]);
 
-  console.log(competition)
   if (loading || !competition) {
     return <div>Loading competition...</div>;
   }
-
-
 
   return (
     <div className="max-w-3xl mx-auto p-4 space-y-6">
@@ -95,7 +90,7 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ walletAddress }) 
       >
         &larr; Back
       </button>
-      
+
       {/* Competition Details */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-3xl font-bold mb-4">{competition.title}</h2>
@@ -117,15 +112,18 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ walletAddress }) 
         <p className="mb-4">
           <span className="font-semibold">Stake Required:</span> {competition.stakeAmount} Tokens
         </p>
+        <p className="mb-4">
+          <span className="font-semibold">Contest Owner:</span> {competition.owner}
+        </p>
 
         {/* Upload File (ipynb) */}
         <div className="mb-4">
           <label className="block font-semibold mb-1">Upload File (ipynb)</label>
           <FileUpload
-            text= "Upload ipynb File"
-            onFileSelect={(file) => {
-              console.log("Uploaded ipynb:", file);
-              setUploadedFile(file);
+            text="Upload ipynb File"
+            onFileSelect={(files) => {
+              console.log("Uploaded ipynb:", files);
+              setUploadedFile(files[0]);
             }}
           />
         </div>
@@ -134,17 +132,20 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ walletAddress }) 
         <div className="mb-4">
           <label className="block font-semibold mb-1">Upload Training Data</label>
           <FileUpload
-            text="Upload CSV File"
-            accept=".csv"
-            onFileSelect={(file) => {
-              console.log("Training data file:", file);
-              setTrainingFile(file);
+            text="Upload csv File"
+            onFileSelect={(files) => {
+              console.log("Training data file:", files);
+              setTrainingFile(files[0]);
             }}
           />
         </div>
 
-        {/* StakeForm: example usage */}
-        <StakeForm stakeAmount={competition.stakeAmount} account={walletAddress} />
+        {/* StakeForm: includes contestOwner so that the payment is sent to them, and NFT is issued */}
+        <StakeForm
+          stakeAmount={parseFloat(competition.stakeAmount)}
+          account={walletAddress}
+          contestOwner={competition.owner}
+        />
       </div>
 
       {/* Leaderboard section - placeholder */}
