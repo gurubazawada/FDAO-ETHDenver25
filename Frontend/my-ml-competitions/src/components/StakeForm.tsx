@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { ethers } from "ethers";
-import credentialIssuerJson from "../artifacts/contracts/CredentialIssuer.sol/CredentialIssuer.json";
-
 const CREDENTIAL_ISSUER_ADDRESS = "0x1E3D38b55B1110077ff66c6A4e6074B32Db34b3A";
 const CREDENTIAL_ISSUER_ABI = [
   {
