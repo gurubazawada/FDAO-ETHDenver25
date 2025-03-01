@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { ethers } from "ethers";
 import { useNavigate } from "react-router-dom";
-import contestFactoryJson from "../artifacts/contracts/ContestFactory.sol/ContestFactory.json";
+import contestFactorEE from "../ContestFactory.json";
 
 const contestFactoryAddress = "0x23c8748F0c69076bf915e7203F4F7e732d60C46D";
-const contestFactoryAbi = contestFactoryJson.abi;
+const contestFactoryAbi = contestFactorEE.abi;
 
 const SponsorDashboard: React.FC<{ walletAddress: string }> = ({ walletAddress }) => {
   const [title, setTitle] = useState("");
