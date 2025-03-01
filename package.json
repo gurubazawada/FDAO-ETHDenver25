@@ -22,5 +22,12 @@
     "clear:all": "yarn clear:artifacts && yarn clear:cache && yarn clear:node_modules",
     "remove:locks": "find . -name 'yarn.lock' -delete",
     "reinstall": "yarn clear:all && yarn install"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.8",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "dotenv": "^16.4.7",
+    "ethers": "^6.13.5",
+    "hardhat": "^2.22.19"
   }
 }
