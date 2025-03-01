@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
-import contestFactoryJson from "../artifacts/contracts/contestFactory.sol/ContestFactory.json";
-import contestJson from "../artifacts/contracts/contest.sol/Contest.json";
+import contestFactoryJson from "../artifacts/contracts/ContestFactory.sol/ContestFactory.json";
+import contestJson from "../artifacts/contracts/Contest.sol/Contest.json";
 
 // Update this address to the one where your ContestFactory is deployed.
 const contestFactoryAddress = "0x23c8748F0c69076bf915e7203F4F7e732d60C46D";
