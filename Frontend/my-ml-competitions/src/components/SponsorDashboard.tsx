@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ethers } from "ethers";
 import { useNavigate } from "react-router-dom";
-import contestFactoryJson from "../../../../my-hardhat-project/artifacts/contracts/contestFactory.sol/ContestFactory.json";
+import contestFactoryJson from "../artifacts/contracts/contestFactory.sol/ContestFactory.json";
 
 const contestFactoryAddress = "0x23c8748F0c69076bf915e7203F4F7e732d60C46D";
 const contestFactoryAbi = contestFactoryJson.abi;
