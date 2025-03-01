@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* You can import a custom font in public/index.html, for example:
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+*/
+
+body {
+  @apply bg-gray-100 text-gray-900 font-sans;
+}
